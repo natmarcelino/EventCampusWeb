@@ -312,3 +312,30 @@ textarea.form-input { min-height: 80px; resize: vertical; }
   .sidebar, .topbar, .toast-wrap, .no-print { display: none !important; }
   .main { margin-left: 0; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   ÍCONES (Lucide) — substituem os emojis
+   ════════════════════════════════════════════════════════════ */
+.ico { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+.nav-item .nav-icon { display: inline-flex; align-items: center; justify-content: center; }
+.nav-item .nav-icon .ico { vertical-align: middle; }
+.stat-icon .ico { vertical-align: middle; }
+.empty-icon { color: var(--ink-faint); display: flex; justify-content: center; }
+.dropdown-menu button { display: flex; align-items: center; gap: 8px; }
+.dropdown-menu button .ico { color: var(--ink-mute); }
+.dropdown-menu button.danger .ico { color: var(--red); }
+.toast { display: flex; align-items: center; gap: 10px; }
+.login-tests button { display: inline-flex; align-items: center; gap: 5px; }
+.modal-close { display: inline-flex; }
+#menu-btn { align-items: center; }
+.badge { gap: 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }
+.form-hint .ico { color: var(--lav); }
+
+/* campo de busca com lupa */
+.search-input {
+  padding-left: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238580A3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+}

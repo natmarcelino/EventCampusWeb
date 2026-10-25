@@ -56,14 +56,14 @@ const badgeStatus = s => `<span class="badge ${(STATUS_EVENTO[s] || {}).badge ||
 function toast(msg, tipo = 'ok') {
   const el = document.createElement('div');
   el.className = 'toast ' + tipo;
-  el.textContent = msg;
+  el.innerHTML = icone(tipo === 'erro' ? 'circle-alert' : 'circle-check', 18) + '<span>' + esc(msg) + '</span>';
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => el.remove(), tipo === 'erro' ? 6000 : 3500);
 }
 function erro(e) { console.error(e); toast(e.message || 'Algo deu errado', 'erro'); }
 
 const carregando = (txt = 'Carregando...') => `<div class="loading-box"><div class="spinner"></div>${esc(txt)}</div>`;
-const vazio = (icone, txt) => `<div class="empty"><div class="empty-icon">${icone}</div><p>${esc(txt)}</p></div>`;
+const vazio = (ic, txt) => `<div class="empty"><div class="empty-icon">${icone(ic, 40)}</div><p>${esc(txt)}</p></div>`;
 
 function setPagina(id, html) {
   const el = document.getElementById('page-' + id);
@@ -166,7 +166,8 @@ function toggleDropdown(btn) {
 // ════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('ano-atual').textContent = new Date().getFullYear();
-  if (window.innerWidth <= 768) document.getElementById('menu-btn').style.display = 'block';
+  aplicarIcones();
+  if (window.innerWidth <= 768) document.getElementById('menu-btn').style.display = 'flex';
 
   // Sessão salva? Confere com a API antes de entrar.
   if (Sessao.token) {
@@ -257,26 +258,26 @@ function renderSidebar() {
   badge.textContent = ehAdmin() ? 'Admin' : 'Professor';
   badge.className = 'sidebar-badge ' + (ehAdmin() ? 'badge-admin' : 'badge-prof');
 
-  const item = (pag, icone, txt, extra = '') =>
-    `<div class="nav-item" onclick="navegarPara('${pag}')" data-page="${pag}"><span class="nav-icon">${icone}</span> ${txt}${extra}</div>`;
+  const item = (pag, ic, txt, extra = '') =>
+    `<div class="nav-item" onclick="navegarPara('${pag}')" data-page="${pag}"><span class="nav-icon">${icone(ic, 18)}</span> ${txt}${extra}</div>`;
 
   const eventos = `
     <div class="nav-section">Eventos</div>
-    ${ehAdmin() ? item('eventos-admin', '📅', 'Todos os Eventos') : item('eventos', '📅', 'Meus Eventos')}
-    ${item('qrcode', '🔲', 'QR Code (Presença)')}
-    ${item('inscritos', '👥', 'Inscritos')}
-    ${item('relatorio', '📊', 'Relatórios')}`;
+    ${ehAdmin() ? item('eventos-admin', 'calendar', 'Todos os Eventos') : item('eventos', 'calendar', 'Meus Eventos')}
+    ${item('qrcode', 'qr-code', 'QR Code (Presença)')}
+    ${item('inscritos', 'users', 'Inscritos')}
+    ${item('relatorio', 'chart-column', 'Relatórios')}`;
 
   document.getElementById('sidebar-nav').innerHTML = ehAdmin() ? `
     <div class="nav-section">Visão Geral</div>
-    ${item('dashboard', '🏠', 'Dashboard')}
+    ${item('dashboard', 'layout-dashboard', 'Dashboard')}
     <div class="nav-section">Acadêmico</div>
-    ${item('cert-externos', '📄', 'Certificados Externos', '<span class="nav-badge" id="badge-pendentes" style="display:none;"></span>')}
-    ${item('horas', '⏱️', 'Horas Complementares')}
-    ${item('cert-final', '🏅', 'Certificado Final')}
+    ${item('cert-externos', 'file-text', 'Certificados Externos', '<span class="nav-badge" id="badge-pendentes" style="display:none;"></span>')}
+    ${item('horas', 'clock', 'Horas Complementares')}
+    ${item('cert-final', 'award', 'Certificado Final')}
     ${eventos}
     <div class="nav-section">Sistema</div>
-    ${item('usuarios', '🧑‍💼', 'Usuários')}
+    ${item('usuarios', 'user-cog', 'Usuários')}
   ` : eventos;
 
   if (ehAdmin()) atualizarBadgePendentes();
@@ -364,21 +365,21 @@ async function renderEventos() {
         <td>${e.inscritos} / ${e.vagas}</td>
         <td>${e.presentes}</td>
         <td>${e.cargaHoraria}h</td>
-        <td>${badgeStatus(e.status)} ${e.qrAtivo ? '<span class="badge badge-amber">● QR ativo</span>' : ''}</td>
+        <td>${badgeStatus(e.status)} ${e.qrAtivo ? '<span class="badge badge-amber"><span class="dot"></span>QR ativo</span>' : ''}</td>
         <td>
           <div class="row" style="flex-wrap:nowrap;">
             <button class="btn btn-outline btn-sm" onclick="abrirEvento(${e.id},'qrcode')">QR</button>
             <button class="btn btn-outline btn-sm" onclick="abrirEvento(${e.id},'inscritos')">Inscritos</button>
             <button class="btn btn-outline btn-sm" onclick="abrirEvento(${e.id},'relatorio')">Relatório</button>
             <div class="dropdown">
-              <button class="btn btn-ghost btn-sm" onclick="toggleDropdown(this)" title="Mais ações">⋯</button>
+              <button class="btn btn-ghost btn-sm" onclick="toggleDropdown(this)" title="Mais ações">${icone('ellipsis', 18)}</button>
               <div class="dropdown-menu">
-                <button onclick="abrirFormEvento(${e.id})">✏️ Editar</button>
-                ${e.status !== 'ATIVO' ? `<button onclick="mudarStatus(${e.id},'ATIVO')">🚀 Publicar (Ativo)</button>` : ''}
-                ${e.status !== 'CONCLUIDO' ? `<button onclick="mudarStatus(${e.id},'CONCLUIDO')">🏁 Marcar como concluído</button>` : ''}
-                ${e.status !== 'RASCUNHO' ? `<button onclick="mudarStatus(${e.id},'RASCUNHO')">📝 Voltar para rascunho</button>` : ''}
-                ${e.status !== 'ENCERRADO' ? `<button class="danger" onclick="mudarStatus(${e.id},'ENCERRADO')">⛔ Encerrar/cancelar</button>` : ''}
-                <button class="danger" onclick="excluirEvento(${e.id})">🗑️ Excluir</button>
+                <button onclick="abrirFormEvento(${e.id})">${icone('pencil', 14)} Editar</button>
+                ${e.status !== 'ATIVO' ? `<button onclick="mudarStatus(${e.id},'ATIVO')">${icone('send', 14)} Publicar (Ativo)</button>` : ''}
+                ${e.status !== 'CONCLUIDO' ? `<button onclick="mudarStatus(${e.id},'CONCLUIDO')">${icone('flag', 14)} Marcar como concluído</button>` : ''}
+                ${e.status !== 'RASCUNHO' ? `<button onclick="mudarStatus(${e.id},'RASCUNHO')">${icone('undo-2', 14)} Voltar para rascunho</button>` : ''}
+                ${e.status !== 'ENCERRADO' ? `<button class="danger" onclick="mudarStatus(${e.id},'ENCERRADO')">${icone('ban', 14)} Encerrar/cancelar</button>` : ''}
+                <button class="danger" onclick="excluirEvento(${e.id})">${icone('trash-2', 14)} Excluir</button>
               </div>
             </div>
           </div>
@@ -394,7 +395,7 @@ async function renderEventos() {
           <h2 style="font-size:20px;font-weight:600;">${ehAdmin() ? 'Todos os Eventos' : 'Meus Eventos'}</h2>
           <p class="text-mute mt-4">Crie, publique e acompanhe a presença dos eventos</p>
         </div>
-        <button class="btn btn-primary" onclick="abrirFormEvento()">+ Novo Evento</button>
+        <button class="btn btn-primary" onclick="abrirFormEvento()">${icone('plus')} Novo Evento</button>
       </div>
       <div class="card" style="padding:0;">
         <div class="tabs">
@@ -408,13 +409,13 @@ async function renderEventos() {
           ${lista.length ? `<table>
             <thead><tr><th>Evento</th><th>Data</th><th>Inscritos/Vagas</th><th>Presentes</th><th>Carga</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>${linhas}</tbody>
-          </table>` : vazio('📭', eventos.length ? 'Nenhum evento com este status.' : 'Você ainda não criou eventos. Clique em "+ Novo Evento".')}
+          </table>` : vazio('inbox', eventos.length ? 'Nenhum evento com este status.' : 'Você ainda não criou eventos. Clique em "+ Novo Evento".')}
         </div>
       </div>
-      <p class="text-mute">💡 Eventos em <b>Rascunho</b> não aparecem para os alunos. Publique para abrir as inscrições.</p>
+      <p class="text-mute row" style="gap:6px;">${icone('info', 14)}<span>Eventos em <b>Rascunho</b> não aparecem para os alunos. Publique para abrir as inscrições.</span></p>
     `);
   } catch (e) {
-    setPagina(pag, vazio('⚠️', e.message));
+    setPagina(pag, vazio('triangle-alert', e.message));
   }
 }
 
@@ -576,7 +577,7 @@ async function renderQRCode() {
   try {
     const { html: picker, evento } = await seletorEvento('qrcode', e => e.status !== 'ENCERRADO');
     if (!evento) {
-      setPagina('qrcode', vazio('🔲', 'Nenhum evento disponível. Crie e publique um evento primeiro.'));
+      setPagina('qrcode', vazio('qr-code', 'Nenhum evento disponível. Crie e publique um evento primeiro.'));
       return;
     }
     qrEstado = await API.qr(evento.id);
@@ -614,12 +615,12 @@ async function renderQRCode() {
             </div>
             <label class="check mb-8"><input type="checkbox" id="qr-usar-local" checked /> Usar a localização deste computador como local do evento</label>
             <p class="form-hint mb-16">
-              ${temLocal ? `📍 Local salvo: ${Number(q.latitude).toFixed(5)}, ${Number(q.longitude).toFixed(5)}` : '📍 Sem local salvo: sem localização, o app aceita presença de qualquer lugar.'}
+              ${temLocal ? `${icone('map-pin', 12)} Local salvo: ${Number(q.latitude).toFixed(5)}, ${Number(q.longitude).toFixed(5)}` : `${icone('map-pin', 12)} Sem local salvo: sem localização, o app aceita presença de qualquer lugar.`}
               <br>O aluno só confirma presença se estiver dentro do raio (cálculo de Haversine).
             </p>
             ${podeAtivar ? `
-              <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="ativarPresenca(this)">▶ ${q.qrAtivo ? 'Reativar / atualizar' : 'Ativar presença'}</button>
-              <button class="btn btn-danger mt-8" style="width:100%;justify-content:center;" onclick="encerrarPresenca(this)" ${q.qrAtivo ? '' : 'disabled'}>⏹ Encerrar presença</button>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="ativarPresenca(this)">${icone('play', 14)} ${q.qrAtivo ? 'Reativar / atualizar' : 'Ativar presença'}</button>
+              <button class="btn btn-danger mt-8" style="width:100%;justify-content:center;" onclick="encerrarPresenca(this)" ${q.qrAtivo ? '' : 'disabled'}>${icone('square', 14)} Encerrar presença</button>
             ` : `<p class="text-mute">Este evento está ${STATUS_EVENTO[evento.status].label.toLowerCase()}: a presença por QR não pode ser aberta.</p>`}
           </div>
         </div>
@@ -627,17 +628,17 @@ async function renderQRCode() {
         <div class="card" style="text-align:center;">
           <p class="card-title" style="text-align:left;">QR Code ao vivo</p>
           <div class="qr-display">
-            <div>${q.qrAtivo ? '<span class="badge badge-green">● Presença ativa</span>' : '<span class="badge badge-gray">Presença fechada</span>'}</div>
+            <div>${q.qrAtivo ? '<span class="badge badge-green"><span class="dot"></span>Presença ativa</span>' : '<span class="badge badge-gray">Presença fechada</span>'}</div>
             <div class="qr-svg ${q.qrAtivo ? '' : 'qr-inativo'}" style="width:260px;">${svgQR(q.qrCodigo)}</div>
             <div class="qr-timer" id="qr-timer">${q.qrAtivo ? '--:--' : '00:00'}</div>
             <p class="qr-label" id="qr-timer-label">${q.qrAtivo ? (q.qrExpiraEm ? 'tempo restante' : 'aberto até você encerrar') : 'Ative a presença para os alunos escanearem pelo app'}</p>
             <div class="row" style="justify-content:center;flex-wrap:wrap;">
-              <button class="btn btn-outline btn-sm" onclick="regenerarQR(this)" title="Gera um código novo; prints/fotos do antigo param de funcionar">↻ Regenerar código</button>
-              <button class="btn btn-primary btn-sm" onclick="abrirQRTelaCheia()" ${q.qrAtivo ? '' : 'disabled'}>⛶ Projetar em tela cheia</button>
+              <button class="btn btn-outline btn-sm" onclick="regenerarQR(this)" title="Gera um código novo; prints/fotos do antigo param de funcionar">${icone('refresh-cw', 14)} Regenerar código</button>
+              <button class="btn btn-primary btn-sm" onclick="abrirQRTelaCheia()" ${q.qrAtivo ? '' : 'disabled'}>${icone('maximize', 14)} Projetar em tela cheia</button>
             </div>
           </div>
           <div class="mt-16">
-            <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="navegarPara('inscritos')">👥 Ver lista de presença</button>
+            <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="navegarPara('inscritos')">${icone('users')} Ver lista de presença</button>
           </div>
         </div>
       </div>
@@ -645,7 +646,7 @@ async function renderQRCode() {
 
     if (q.qrAtivo) iniciarRelogioQR();
   } catch (e) {
-    setPagina('qrcode', vazio('⚠️', e.message));
+    setPagina('qrcode', vazio('triangle-alert', e.message));
   }
 }
 
@@ -682,7 +683,7 @@ function iniciarRelogioQR() {
       if (pe) pe.textContent = q.inscritos - q.presentes;
       const fs = document.getElementById('qr-fs-presentes');
       if (fs) fs.textContent = `${q.presentes} presentes`;
-      if (q.presentes > antes) toast(`✅ +${q.presentes - antes} presença(s) confirmada(s)`);
+      if (q.presentes > antes) toast(`+${q.presentes - antes} presença(s) confirmada(s)`);
       if (!q.qrAtivo) renderQRCode();
     } catch { /* ignora falhas pontuais */ }
   }, 5000);
@@ -758,7 +759,7 @@ async function renderInscritos() {
   setPagina('inscritos', carregando());
   try {
     const { html: picker, evento } = await seletorEvento('inscritos');
-    if (!evento) { setPagina('inscritos', vazio('👥', 'Nenhum evento cadastrado ainda.')); return; }
+    if (!evento) { setPagina('inscritos', vazio('users', 'Nenhum evento cadastrado ainda.')); return; }
     cacheInscritos = await API.inscritos(evento.id);
     const presentes = cacheInscritos.filter(i => i.presencaConfirmada).length;
 
@@ -772,12 +773,12 @@ async function renderInscritos() {
         <div class="row">
           <span class="badge badge-green">${presentes} presentes</span>
           <span class="badge badge-amber">${cacheInscritos.length - presentes} pendentes</span>
-          <button class="btn btn-outline btn-sm" onclick="exportarInscritos()" ${cacheInscritos.length ? '' : 'disabled'}>⬇ Exportar Excel</button>
+          <button class="btn btn-outline btn-sm" onclick="exportarInscritos()" ${cacheInscritos.length ? '' : 'disabled'}>${icone('download', 14)} Exportar Excel</button>
         </div>
       </div>
       <div class="card" style="padding:0;margin-bottom:16px;">
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
-          <input class="form-input" placeholder="🔍 Buscar aluno, matrícula ou curso..." style="max-width:340px;" oninput="filtrarTabela('tabela-inscritos', this.value)">
+          <input class="form-input search-input" placeholder="Buscar aluno, matrícula ou curso..." style="max-width:340px;" oninput="filtrarTabela('tabela-inscritos', this.value)">
         </div>
         <div class="table-wrap" id="tabela-inscritos">
           ${cacheInscritos.length ? `<table>
@@ -789,21 +790,21 @@ async function renderInscritos() {
                 <td>${esc(i.curso || '—')}</td>
                 <td><span class="badge ${i.presencaConfirmada ? 'badge-green' : 'badge-amber'}">${i.presencaConfirmada ? 'Presente' : 'Pendente'}</span></td>
                 <td class="text-mute">${i.presencaConfirmada
-                  ? `${fmtDataHora(i.confirmadaEm)}<br>${i.formaConfirmacao === 'MANUAL' ? '✍️ manual' : '📱 QR Code'}${i.distanciaMetros != null ? ` · ${Math.round(i.distanciaMetros)} m` : ''}`
+                  ? `${fmtDataHora(i.confirmadaEm)}<br>${i.formaConfirmacao === 'MANUAL' ? icone('pen-line', 12) + ' manual' : icone('smartphone', 12) + ' QR Code'}${i.distanciaMetros != null ? ` · ${Math.round(i.distanciaMetros)} m` : ''}`
                   : '—'}</td>
                 <td>
                   ${i.presencaConfirmada
-                    ? `<button class="btn btn-danger btn-sm" onclick="presencaManual(${i.id}, false)">✕ Remover</button>`
-                    : `<button class="btn btn-success btn-sm" onclick="presencaManual(${i.id}, true)">✓ Confirmar</button>`}
+                    ? `<button class="btn btn-danger btn-sm" onclick="presencaManual(${i.id}, false)">${icone('x', 14)} Remover</button>`
+                    : `<button class="btn btn-success btn-sm" onclick="presencaManual(${i.id}, true)">${icone('check', 14)} Confirmar</button>`}
                 </td>
               </tr>`).join('')}
             </tbody>
-          </table>` : vazio('📭', 'Nenhum aluno inscrito neste evento ainda.')}
+          </table>` : vazio('inbox', 'Nenhum aluno inscrito neste evento ainda.')}
         </div>
       </div>
     `);
   } catch (e) {
-    setPagina('inscritos', vazio('⚠️', e.message));
+    setPagina('inscritos', vazio('triangle-alert', e.message));
   }
 }
 
@@ -842,7 +843,7 @@ async function renderRelatorio() {
   setPagina('relatorio', carregando('Gerando relatório...'));
   try {
     const { html: picker, evento } = await seletorEvento('relatorio');
-    if (!evento) { setPagina('relatorio', vazio('📊', 'Nenhum evento cadastrado ainda.')); return; }
+    if (!evento) { setPagina('relatorio', vazio('chart-column', 'Nenhum evento cadastrado ainda.')); return; }
     const r = relatorioAtual = await API.relatorioEvento(evento.id);
     const e = r.evento;
 
@@ -863,16 +864,16 @@ async function renderRelatorio() {
           <p class="text-mute mt-4">${fmtData(e.data)} · ${horarioEvento(e)} · ${esc(e.local || '')} ${e.professor ? '· ' + esc(e.professor) : ''}</p>
         </div>
         <div class="row">
-          <button class="btn btn-outline btn-sm" onclick="exportarRelatorioPDF()">📄 Exportar PDF</button>
-          <button class="btn btn-outline btn-sm" onclick="exportarRelatorioExcel()">📊 Exportar Excel</button>
+          <button class="btn btn-outline btn-sm" onclick="exportarRelatorioPDF()">${icone('file-text', 14)} Exportar PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="exportarRelatorioExcel()">${icone('file-spreadsheet', 14)} Exportar Excel</button>
         </div>
       </div>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-icon" style="background:var(--lav-light);">👥</div><div class="stat-info"><p>${r.inscritos}</p><span>Inscritos de ${e.vagas} vagas</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--mint-light);">✅</div><div class="stat-info"><p>${r.presentes}</p><span>Presentes</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--sun-light);">📊</div><div class="stat-info"><p>${r.taxaPresenca}%</p><span>Taxa de presença</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--peach-light);">⏱️</div><div class="stat-info"><p>${r.horasGeradas}h</p><span>Horas geradas (${e.cargaHoraria}h cada)</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--lav-light);color:var(--lav-dark);">${icone('users', 22)}</div><div class="stat-info"><p>${r.inscritos}</p><span>Inscritos de ${e.vagas} vagas</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--mint-light);color:var(--mint-dark);">${icone('circle-check', 22)}</div><div class="stat-info"><p>${r.presentes}</p><span>Presentes</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--sun-light);color:var(--sun-dark);">${icone('percent', 22)}</div><div class="stat-info"><p>${r.taxaPresenca}%</p><span>Taxa de presença</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--peach-light);color:var(--peach);">${icone('clock', 22)}</div><div class="stat-info"><p>${r.horasGeradas}h</p><span>Horas geradas (${e.cargaHoraria}h cada)</span></div></div>
       </div>
 
       <div class="grid-2">
@@ -907,12 +908,12 @@ async function renderRelatorio() {
               <td class="fw-600">${esc(a.nome)}</td><td>${esc(a.matricula)}</td><td>${esc(a.curso || '—')}</td>
               <td><span class="badge ${a.presente ? 'badge-green' : 'badge-red'}">${a.presente ? 'Presente' : 'Ausente'}</span></td>
               <td class="text-mute">${a.presente ? fmtDataHora(a.confirmadaEm) : '—'}</td></tr>`).join('')}
-            </tbody></table>` : vazio('📭', 'Nenhum inscrito.')}
+            </tbody></table>` : vazio('inbox', 'Nenhum inscrito.')}
         </div>
       </div>
     `);
   } catch (e) {
-    setPagina('relatorio', vazio('⚠️', e.message));
+    setPagina('relatorio', vazio('triangle-alert', e.message));
   }
 }
 
@@ -986,10 +987,10 @@ async function renderDashboard() {
 
     setPagina('dashboard', `
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-icon" style="background:var(--lav-light);">👨‍🎓</div><div class="stat-info"><p>${s.alunosAtivos.toLocaleString('pt-BR')}</p><span>Alunos cadastrados</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--mint-light);">📅</div><div class="stat-info"><p>${s.eventosAtivos}</p><span>Eventos ativos (${s.eventosTotal} no total)</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--sun-light);">🏅</div><div class="stat-info"><p>${s.certsFinaisEmitidos}</p><span>Certificados finais emitidos</span></div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--peach-light);">⏱️</div><div class="stat-info"><p>${s.horasRegistradas.toLocaleString('pt-BR')}h</p><span>Horas registradas</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--lav-light);color:var(--lav-dark);">${icone('graduation-cap', 22)}</div><div class="stat-info"><p>${s.alunosAtivos.toLocaleString('pt-BR')}</p><span>Alunos cadastrados</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--mint-light);color:var(--mint-dark);">${icone('calendar', 22)}</div><div class="stat-info"><p>${s.eventosAtivos}</p><span>Eventos ativos (${s.eventosTotal} no total)</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--sun-light);color:var(--sun-dark);">${icone('award', 22)}</div><div class="stat-info"><p>${s.certsFinaisEmitidos}</p><span>Certificados finais emitidos</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--peach-light);color:var(--peach);">${icone('clock', 22)}</div><div class="stat-info"><p>${s.horasRegistradas.toLocaleString('pt-BR')}h</p><span>Horas registradas</span></div></div>
       </div>
 
       <div class="grid-2">
@@ -1006,8 +1007,8 @@ async function renderDashboard() {
             </div>`).join('')}
           <div class="mt-16" style="text-align:center;">
             ${s.certsPendentes
-              ? `<button class="badge badge-red" style="font-size:13px;padding:6px 16px;cursor:pointer;" onclick="navegarPara('cert-externos')">${s.certsPendentes} pendente(s) — analisar →</button>`
-              : '<span class="badge badge-green" style="font-size:13px;padding:6px 16px;">Nenhum certificado pendente 🎉</span>'}
+              ? `<button class="badge badge-red" style="font-size:13px;padding:6px 16px;cursor:pointer;" onclick="navegarPara('cert-externos')">${s.certsPendentes} pendente(s) — analisar</button>`
+              : '<span class="badge badge-green" style="font-size:13px;padding:6px 16px;">Nenhum certificado pendente</span>'}
           </div>
         </div>
       </div>
@@ -1020,7 +1021,7 @@ async function renderDashboard() {
     `);
     atualizarBadgePendentes();
   } catch (e) {
-    setPagina('dashboard', vazio('⚠️', e.message));
+    setPagina('dashboard', vazio('triangle-alert', e.message));
   }
 }
 
@@ -1056,7 +1057,7 @@ async function renderCertExternos() {
           ${aba('TODOS', 'Todos', todos.length)}
         </div>
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
-          <input class="form-input" placeholder="🔍 Buscar aluno ou curso..." style="max-width:320px;" oninput="filtrarTabela('cert-tabela', this.value)">
+          <input class="form-input search-input" placeholder="Buscar aluno ou curso..." style="max-width:320px;" oninput="filtrarTabela('cert-tabela', this.value)">
         </div>
         <div class="table-wrap" id="cert-tabela">
           ${cacheCerts.length ? `<table>
@@ -1071,19 +1072,19 @@ async function renderCertExternos() {
                 <td>${badge(c.status)}${c.analisadoPor ? `<p class="text-mute">por ${esc(c.analisadoPor)}</p>` : ''}</td>
                 <td>
                   <div class="row" style="flex-wrap:nowrap;">
-                    ${c.temArquivo ? `<button class="btn btn-ghost btn-sm" onclick="verAnexo(${c.id})" title="Ver arquivo enviado">📎 Ver</button>` : '<span class="text-mute" title="Sem anexo">—</span>'}
-                    ${c.status !== 'APROVADO' ? `<button class="btn btn-primary btn-sm" onclick="modalAprovar(${c.id})">✓ Aprovar</button>` : ''}
-                    ${c.status !== 'REPROVADO' ? `<button class="btn btn-danger btn-sm" onclick="modalReprovar(${c.id})">✕ Reprovar</button>` : ''}
+                    ${c.temArquivo ? `<button class="btn btn-ghost btn-sm" onclick="verAnexo(${c.id})" title="Ver arquivo enviado">${icone('paperclip', 14)} Ver</button>` : '<span class="text-mute" title="Sem anexo">—</span>'}
+                    ${c.status !== 'APROVADO' ? `<button class="btn btn-primary btn-sm" onclick="modalAprovar(${c.id})">${icone('check', 14)} Aprovar</button>` : ''}
+                    ${c.status !== 'REPROVADO' ? `<button class="btn btn-danger btn-sm" onclick="modalReprovar(${c.id})">${icone('x', 14)} Reprovar</button>` : ''}
                   </div>
                 </td>
               </tr>`).join('')}
-            </tbody></table>` : vazio('📭', abaCert === 'PENDENTE' ? 'Nenhum certificado aguardando análise. 🎉' : 'Nenhum certificado aqui.')}
+            </tbody></table>` : vazio('inbox', abaCert === 'PENDENTE' ? 'Nenhum certificado aguardando análise.' : 'Nenhum certificado aqui.')}
         </div>
       </div>
     `);
     atualizarBadgePendentes();
   } catch (e) {
-    setPagina('cert-externos', vazio('⚠️', e.message));
+    setPagina('cert-externos', vazio('triangle-alert', e.message));
   }
 }
 
@@ -1099,7 +1100,7 @@ function modalAprovar(id) {
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="aprovarCert(${id}, this)">✓ Aprovar</button>
+      <button class="btn btn-primary" onclick="aprovarCert(${id}, this)">${icone('check', 14)} Aprovar</button>
     </div>`);
 }
 
@@ -1110,7 +1111,7 @@ async function aprovarCert(id, btn) {
     try {
       await API.aprovarCert(id, carga);
       fecharModal();
-      toast('✅ Certificado aprovado');
+      toast('Certificado aprovado');
       renderCertExternos();
     } catch (e) { erroModal(e.message); }
   });
@@ -1127,7 +1128,7 @@ function modalReprovar(id) {
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-danger" onclick="reprovarCert(${id}, this)">✕ Reprovar</button>
+      <button class="btn btn-danger" onclick="reprovarCert(${id}, this)">${icone('x', 14)} Reprovar</button>
     </div>`);
 }
 
@@ -1179,8 +1180,8 @@ async function renderHoras() {
           <p class="text-mute mt-4">Horas = eventos com presença confirmada + certificados externos aprovados</p>
         </div>
         <div class="row">
-          <input class="form-input" placeholder="🔍 Buscar aluno..." style="max-width:240px;" oninput="filtrarTabela('tabela-horas', this.value)">
-          <button class="btn btn-outline btn-sm" onclick="exportarHoras()">⬇ Excel</button>
+          <input class="form-input search-input" placeholder="Buscar aluno..." style="max-width:240px;" oninput="filtrarTabela('tabela-horas', this.value)">
+          <button class="btn btn-outline btn-sm" onclick="exportarHoras()">${icone('download', 14)} Excel</button>
         </div>
       </div>
       <div class="card" style="padding:0;">
@@ -1206,17 +1207,17 @@ async function renderHoras() {
                 </td>
                 <td><span class="badge ${a.concluido ? 'badge-green' : 'badge-amber'}">${a.concluido ? 'Concluído' : `Faltam ${a.horasRestantes}h`}</span></td>
                 <td>${a.certFinalEmitido
-                  ? `<button class="btn btn-outline btn-sm" onclick="abrirCertFinal(${a.id})">🏅 Ver certificado</button>`
+                  ? `<button class="btn btn-outline btn-sm" onclick="abrirCertFinal(${a.id})">${icone('award', 14)} Ver certificado</button>`
                   : a.concluido
-                    ? `<button class="btn btn-primary btn-sm" onclick="abrirCertFinal(${a.id})">🏅 Emitir certificado</button>`
+                    ? `<button class="btn btn-primary btn-sm" onclick="abrirCertFinal(${a.id})">${icone('award', 14)} Emitir certificado</button>`
                     : '<span class="text-mute text-sm">Aguardando meta</span>'}</td>
               </tr>`).join('')}
-            </tbody></table>` : vazio('👨‍🎓', 'Nenhum aluno nesta lista.')}
+            </tbody></table>` : vazio('graduation-cap', 'Nenhum aluno nesta lista.')}
         </div>
       </div>
     `);
   } catch (e) {
-    setPagina('horas', vazio('⚠️', e.message));
+    setPagina('horas', vazio('triangle-alert', e.message));
   }
 }
 
@@ -1259,9 +1260,9 @@ async function renderCertFinal() {
                 <p class="text-mute" style="font-size:11px;">${esc(a.curso || '')} · ${a.horasCompletas}h de ${a.horasTotal}h</p>
               </div>
               ${a.certFinalEmitido
-                ? `<button class="btn btn-outline btn-sm" onclick="visualizarCertFinal(${a.id})">👁 Ver</button>`
-                : `<button class="btn btn-primary btn-sm" onclick="emitirCertFinal(${a.id}, this)">🏅 Emitir</button>`}
-            </div>`).join('') : vazio('⏳', 'Nenhum aluno atingiu a meta ainda.')}
+                ? `<button class="btn btn-outline btn-sm" onclick="visualizarCertFinal(${a.id})">${icone('eye', 14)} Ver</button>`
+                : `<button class="btn btn-primary btn-sm" onclick="emitirCertFinal(${a.id}, this)">${icone('award', 14)} Emitir</button>`}
+            </div>`).join('') : vazio('hourglass', 'Nenhum aluno atingiu a meta ainda.')}
         </div>
         <div class="card" style="background:var(--lav-light);text-align:center;">
           <p class="card-title" style="text-align:left;">Pré-visualização</p>
@@ -1280,7 +1281,7 @@ async function renderCertFinal() {
       else if (a && a.concluido) emitirCertFinal(sel);
     }
   } catch (e) {
-    setPagina('cert-final', vazio('⚠️', e.message));
+    setPagina('cert-final', vazio('triangle-alert', e.message));
   }
 }
 
@@ -1291,7 +1292,7 @@ async function emitirCertFinal(alunoId, btn) {
   await comLoading(btn, async () => {
     try {
       certFinalAtual = await API.emitirFinal(alunoId);
-      toast('🏅 Certificado final emitido!');
+      toast('Certificado final emitido!');
       cacheHoras = await API.horasAlunos();
       await renderCertFinal();
       mostrarCertFinal(certFinalAtual);
@@ -1334,7 +1335,7 @@ function mostrarCertFinal(c) {
   el.innerHTML = `
     ${htmlCertificado(c)}
     <div class="row mt-16" style="justify-content:center;gap:10px;">
-      <button class="btn btn-primary btn-sm" onclick="baixarCertificadoPDF()">⬇ Baixar PDF</button>
+      <button class="btn btn-primary btn-sm" onclick="baixarCertificadoPDF()">${icone('download', 14)} Baixar PDF</button>
     </div>`;
 }
 
@@ -1358,11 +1359,11 @@ async function renderUsuarios() {
           <h2 style="font-size:20px;font-weight:600;">Usuários</h2>
           <p class="text-mute mt-4">Professores e coordenadores são cadastrados aqui. Alunos se cadastram pelo app.</p>
         </div>
-        <button class="btn btn-primary" onclick="abrirFormUsuario()">+ Novo usuário</button>
+        <button class="btn btn-primary" onclick="abrirFormUsuario()">${icone('plus')} Novo usuário</button>
       </div>
       <div class="card" style="padding:0;">
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
-          <input class="form-input" placeholder="🔍 Buscar..." style="max-width:300px;" oninput="filtrarTabela('tabela-usuarios', this.value)">
+          <input class="form-input search-input" placeholder="Buscar..." style="max-width:300px;" oninput="filtrarTabela('tabela-usuarios', this.value)">
         </div>
         <div class="table-wrap" id="tabela-usuarios">
           <table>
@@ -1376,7 +1377,7 @@ async function renderUsuarios() {
       </div>
     `);
   } catch (e) {
-    setPagina('usuarios', vazio('⚠️', e.message));
+    setPagina('usuarios', vazio('triangle-alert', e.message));
   }
 }
 

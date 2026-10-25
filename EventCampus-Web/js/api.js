@@ -36,7 +36,7 @@ async function api(metodo, rota, corpo) {
       body: corpo !== undefined ? JSON.stringify(corpo) : undefined,
     });
   } catch (e) {
-    throw new ApiError('Não foi possível conectar à API em ' + API_URL + '. Ela está rodando?', 0);
+    throw new ApiError('Não foi possível conectar à API em ' + API_URL + '. Se ela estiver online, pode estar acordando: aguarde uns 40 segundos e tente de novo.', 0);
   }
 
   const texto = await resp.text();

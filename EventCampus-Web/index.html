@@ -39,8 +39,8 @@
 
       <p class="text-mute" style="margin-top:16px;">Usuários de teste (senha 123456):</p>
       <div class="login-tests">
-        <button type="button" onclick="preencherLogin('professor@uni.edu.br')">👨‍🏫 Professor</button>
-        <button type="button" onclick="preencherLogin('admin@uni.edu.br')">🏛️ Coordenação</button>
+        <button type="button" onclick="preencherLogin('professor@uni.edu.br')"><i data-icon="presentation" data-size="13"></i> Professor</button>
+        <button type="button" onclick="preencherLogin('admin@uni.edu.br')"><i data-icon="landmark" data-size="13"></i> Coordenação</button>
       </div>
     </form>
 
@@ -78,7 +78,7 @@
 
     <div class="sidebar-footer">
       <div class="nav-item" onclick="fazerLogout()">
-        <span class="nav-icon">🚪</span> Sair da conta
+        <span class="nav-icon"><i data-icon="log-out" data-size="18"></i></span> Sair da conta
       </div>
     </div>
   </aside>
@@ -86,11 +86,11 @@
   <div class="main">
     <header class="topbar">
       <div class="row" style="gap:14px;">
-        <button onclick="toggleSidebar()" style="font-size:20px;color:var(--ink-mute);display:none;" id="menu-btn" aria-label="Abrir menu">☰</button>
+        <button onclick="toggleSidebar()" style="font-size:20px;color:var(--ink-mute);display:none;" id="menu-btn" aria-label="Abrir menu"><i data-icon="menu" data-size="22"></i></button>
         <span class="topbar-title" id="topbar-title">EventCampus</span>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-ghost btn-sm" onclick="recarregarPagina()" title="Atualizar">↻ Atualizar</button>
+        <button class="btn btn-ghost btn-sm" onclick="recarregarPagina()" title="Atualizar"><i data-icon="refresh-cw" data-size="14"></i> Atualizar</button>
         <div id="topbar-avatar" style="width:34px;height:34px;border-radius:10px;background:var(--lav-light);color:var(--lav-dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">EC</div>
       </div>
     </header>
@@ -115,7 +115,7 @@
 <!-- Modal genérico (preenchido via JS) -->
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)fecharModal()">
   <div class="modal" id="modal-box">
-    <span class="modal-close" onclick="fecharModal()">✕</span>
+    <span class="modal-close" onclick="fecharModal()"><i data-icon="x" data-size="20"></i></span>
     <p class="modal-title" id="modal-titulo"></p>
     <div id="modal-corpo"></div>
   </div>
@@ -132,6 +132,7 @@
 <div class="toast-wrap" id="toasts"></div>
 
 <script src="js/lib/qrcode.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
