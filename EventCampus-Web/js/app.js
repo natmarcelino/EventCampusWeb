@@ -482,9 +482,9 @@ async function salvarEvento(id, btn) {
     titulo: val('ev-titulo'),
     descricao: val('ev-descricao'),
     tipo: val('ev-tipo'),
-    cargaHoraria: parseInt(val('ev-carga'), 10),
+    cargaHoraria: Number(val('ev-carga')),
     data: val('ev-data'),
-    vagas: parseInt(val('ev-vagas'), 10),
+    vagas: Number(val('ev-vagas')),
     horarioInicio: val('ev-inicio') || null,
     horarioFim: val('ev-fim') || null,
     local: val('ev-local'),
@@ -493,8 +493,17 @@ async function salvarEvento(id, btn) {
   if (!dados.data) return erroModal('Informe a data do evento.');
   if (!(dados.cargaHoraria > 0)) return erroModal('A carga horária deve ser maior que zero.');
   if (!(dados.vagas > 0)) return erroModal('O número de vagas deve ser maior que zero.');
+  if (!Number.isInteger(dados.cargaHoraria)) return erroModal('A carga horária deve ser em horas inteiras.');
+  if (!Number.isInteger(dados.vagas)) return erroModal('O número de vagas deve ser um número inteiro.');
   if (dados.horarioInicio && dados.horarioFim && dados.horarioFim < dados.horarioInicio)
     return erroModal('O término deve ser depois do início.');
+  if (dados.horarioInicio && dados.horarioFim) {
+    const [hi, mi] = dados.horarioInicio.split(':').map(Number);
+    const [hf, mf] = dados.horarioFim.split(':').map(Number);
+    const duracaoMin = (hf * 60 + mf) - (hi * 60 + mi);
+    if (dados.cargaHoraria * 60 > duracaoMin)
+      return erroModal('A carga horária não pode ser maior que a duração do evento.');
+  }
   if (!id && document.getElementById('ev-publicar')?.checked) dados.status = 'ATIVO';
 
   await comLoading(btn, async () => {
@@ -632,6 +641,10 @@ async function renderQRCode() {
             <div class="qr-svg ${q.qrAtivo ? '' : 'qr-inativo'}" style="width:260px;">${svgQR(q.qrCodigo)}</div>
             <div class="qr-timer" id="qr-timer">${q.qrAtivo ? '--:--' : '00:00'}</div>
             <p class="qr-label" id="qr-timer-label">${q.qrAtivo ? (q.qrExpiraEm ? 'tempo restante' : 'aberto até você encerrar') : 'Ative a presença para os alunos escanearem pelo app'}</p>
+            <div style="background:var(--lav-light);color:var(--lav-dark);border-radius:10px;padding:10px 14px;margin:10px auto;max-width:340px;font-size:13px;line-height:1.4;">
+              ${icone('smartphone', 14)} <strong>Leitura somente pelo app EventCampus.</strong><br>
+              A câmera comum do celular não abre este código. O aluno deve tocar em <strong>"Confirmar presença (QR Code)"</strong> no app.
+            </div>
             <div class="row" style="justify-content:center;flex-wrap:wrap;">
               <button class="btn btn-outline btn-sm" onclick="regenerarQR(this)" title="Gera um código novo; prints/fotos do antigo param de funcionar">${icone('refresh-cw', 14)} Regenerar código</button>
               <button class="btn btn-primary btn-sm" onclick="abrirQRTelaCheia()" ${q.qrAtivo ? '' : 'disabled'}>${icone('maximize', 14)} Projetar em tela cheia</button>

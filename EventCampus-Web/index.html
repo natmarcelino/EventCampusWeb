@@ -125,7 +125,11 @@
 <div class="qr-fullscreen" id="qr-fullscreen" onclick="fecharQRTelaCheia()">
   <h2 id="qr-fs-titulo"></h2>
   <div class="qr-big" id="qr-fs-codigo"></div>
-  <p class="text-mute" style="font-size:15px;">Abra o app EventCampus → Escanear QR Code · <span id="qr-fs-presentes"></span></p>
+  <div style="background:var(--lav-light);color:var(--lav-dark);border-radius:14px;padding:14px 22px;max-width:640px;font-size:18px;line-height:1.5;">
+    <strong>📱 Leitura somente pelo app EventCampus</strong><br>
+    Abra o app e toque em <strong>"Confirmar presença (QR Code)"</strong>. A câmera comum do celular não lê este código.
+  </div>
+  <p class="text-mute" style="font-size:15px;"><span id="qr-fs-presentes"></span></p>
   <p class="text-mute">(clique em qualquer lugar para sair)</p>
 </div>
 
